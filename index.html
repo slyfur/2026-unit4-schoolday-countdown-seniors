@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>School Days Countdown</title>
+  <style>
+    :root { color-scheme: dark; }
+    body{
+      margin:0; min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      background:#000; color:#fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      text-align:center;
+    }
+    .wrap{ padding:32px; max-width:900px; }
+    .big{ font-size: clamp(48px, 10vw, 120px); line-height:1; font-weight:800; letter-spacing: -0.02em; }
+    .label{ margin-top:14px; font-size: clamp(18px, 3vw, 28px); opacity:.9; }
+    .sub{ margin-top:22px; font-size: 16px; opacity:.75; }
+    .tiny{ margin-top:8px; font-size: 13px; opacity:.6; }
+    .pill{
+      display:inline-block; margin-top:18px;
+      padding:8px 12px; border:1px solid rgba(255,255,255,.25);
+      border-radius:999px; font-size:13px; opacity:.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="days" class="big">--</div>
+    <div class="label">school days left</div>
+    <div id="target" class="sub"></div>
+    <div id="now" class="tiny"></div>
+    <div class="pill">Weekends + listed no-school days excluded</div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    // Last official attendance day for high school (Unit 4 calendar): May 22, 2026
+    const LAST_ATTENDANCE_DAY = "2026-05-22";
+
+    // Unit 4 "NO SCHOOL for students" dates that can occur between "today" and LAST_ATTENDANCE_DAY.
+    // (From the calendar: legal holidays, conference days, spring holiday, spring break, etc.)
+    // If you re-use this page next year, update these lists.
+    const NO_SCHOOL_DATES = new Set([
+      "2026-02-16", // President’s Day
+      "2026-03-12", // SIP/PT Conf. (no students)
+      "2026-03-13", // SIP/PT Conf. (no students)
+      "2026-03-16", // Spring Break
+      "2026-03-17",
+      "2026-03-18",
+      "2026-03-19",
+      "2026-03-20",
+      "2026-04-03"  // Spring Holiday
+      // Note: May 25 and May 26 are after senior last day (May 22), so not included.
+    ]);
+
+    // Optional: If you want "today" to NOT count when it's already evening,
+    // we start counting from tomorrow. Leave true for your scenario.
+    const START_FROM_TOMORROW = true;
+
+    // ====== DATE HELPERS ======
+    function pad2(n){ return String(n).padStart(2, "0"); }
+
+    // Local YYYY-MM-DD (prevents UTC timezone off-by-one problems)
+    function toYMD(d){
+      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+    }
+
+    function startOfDay(d){
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function addDays(d, n){
+      const x = new Date(d);
+      x.setDate(x.getDate() + n);
+      return x;
+    }
+
+    function isWeekend(d){
+      const day = d.getDay(); // 0 Sun, 6 Sat
+      return day === 0 || day === 6;
+    }
+
+    function countSchoolDays(fromDate, throughDate){
+      // Counts eligible days from fromDate..throughDate inclusive.
+      let count = 0;
+      for (let d = startOfDay(fromDate); d <= throughDate; d = addDays(d, 1)) {
+        if (isWeekend(d)) continue;
+        if (NO_SCHOOL_DATES.has(toYMD(d))) continue;
+        count++;
+      }
+      return count;
+    }
+
+    // ====== RENDER ======
+    const daysEl = document.getElementById("days");
+    const targetEl = document.getElementById("target");
+    const nowEl = document.getElementById("now");
+
+    function render(){
+      const now = new Date();
+      const today = startOfDay(now);
+
+      const start = START_FROM_TOMORROW ? addDays(today, 1) : today;
+      const last = new Date(LAST_ATTENDANCE_DAY + "T00:00:00"); // local midnight
+
+      let daysLeft = 0;
+      if (start > last) {
+        daysLeft = 0;
+      } else {
+        daysLeft = countSchoolDays(start, last);
+      }
+
+      daysEl.textContent = daysLeft;
+
+      // Friendly target text
+      const lastStr = last.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      targetEl.textContent = `Counting down to ${lastStr}`;
+
+      nowEl.textContent = `Last updated: ${now.toLocaleString()}`;
+    }
+
+    render();
+    setInterval(render, 1000);
+  </script>
+</body>
+</html>
