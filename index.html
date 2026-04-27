@@ -40,8 +40,6 @@
     const LAST_ATTENDANCE_DAY = "2026-05-19";
 
     // Unit 4 "NO SCHOOL for students" dates that can occur between "today" and LAST_ATTENDANCE_DAY.
-    // (From the calendar: legal holidays, conference days, spring holiday, spring break, etc.)
-    // If you re-use this page next year, update these lists.
     const NO_SCHOOL_DATES = new Set([
       "2026-02-16", // President’s Day
       "2026-03-12", // SIP/PT Conf. (no students)
@@ -52,12 +50,7 @@
       "2026-03-19",
       "2026-03-20",
       "2026-04-03"  // Spring Holiday
-      // Note: May 25 and May 26 are after senior last day (May 22), so not included.
     ]);
-
-    // Optional: If you want "today" to NOT count when it's already evening,
-    // we start counting from tomorrow. Leave true for your scenario.
-    const START_FROM_TOMORROW = true;
 
     // ====== DATE HELPERS ======
     function pad2(n){ return String(n).padStart(2, "0"); }
@@ -102,7 +95,11 @@
       const now = new Date();
       const today = startOfDay(now);
 
-      const start = START_FROM_TOMORROW ? addDays(today, 1) : today;
+      // Check if current time is past 3:20 PM (15:20)
+      const isPastSchoolDay = (now.getHours() > 15) || (now.getHours() === 15 && now.getMinutes() >= 20);
+
+      // If it's past 3:20 PM, start counting from tomorrow
+      const start = isPastSchoolDay ? addDays(today, 1) : today;
       const last = new Date(LAST_ATTENDANCE_DAY + "T00:00:00"); // local midnight
 
       let daysLeft = 0;
@@ -116,7 +113,7 @@
 
       // Friendly target text
       const lastStr = last.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-      targetEl.textContent = `Counting down to ${lastStr}`;
+      targetEl.textContent = `Counting down to ${lastStr}`;  
 
       nowEl.textContent = `Last updated: ${now.toLocaleString()}`;
     }
@@ -126,4 +123,3 @@
   </script>
 </body>
 </html>
-
