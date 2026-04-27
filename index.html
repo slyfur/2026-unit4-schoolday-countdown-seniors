@@ -28,7 +28,7 @@
 <body>
   <div class="wrap">
     <div id="days" class="big">--</div>
-    <div class="label">school days left</div>
+    <div id="student-label" class="label">school days left</div>
     <div id="target" class="sub"></div>
     <div id="now" class="tiny"></div>
     <div class="pill">Weekends + listed no-school days excluded</div>
@@ -36,8 +36,17 @@
 
   <script>
     // ====== CONFIG ======
-    // Last official attendance day for high school (Unit 4 calendar): May 19, 2026
-    const LAST_ATTENDANCE_DAY = "2026-05-19";
+    // Check query string for ?type=underclass 
+    const urlParams = new URLSearchParams(window.location.search);
+    const isUnderclassman = urlParams.get('type') === 'underclass';
+
+    // Set the last attendance day dynamically based on the query string
+    const LAST_ATTENDANCE_DAY = isUnderclassman ? "2026-05-22" : "2026-05-19";
+
+    // Update the label so users know which countdown they are looking at
+    document.getElementById('student-label').textContent = isUnderclassman 
+        ? "school days left (Non-Seniors)" 
+        : "school days left (Seniors)";
 
     // Unit 4 "NO SCHOOL for students" dates that can occur between "today" and LAST_ATTENDANCE_DAY.
     const NO_SCHOOL_DATES = new Set([
@@ -113,7 +122,7 @@
 
       // Friendly target text
       const lastStr = last.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-      targetEl.textContent = `Counting down to ${lastStr}`;  
+      targetEl.textContent = `Counting down to ${lastStr}`;
 
       nowEl.textContent = `Last updated: ${now.toLocaleString()}`;
     }
